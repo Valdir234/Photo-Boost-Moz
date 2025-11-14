@@ -6,9 +6,11 @@ interface ProductDetailModalProps {
   product: Product | null;
   onClose: () => void;
   onAddToCart: (product: Product, quantity: number, customizationNotes: string) => void;
+  onToggleWishlist: (productId: number) => void;
+  isInWishlist: boolean;
 }
 
-export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose, onAddToCart }) => {
+export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product, onClose, onAddToCart, onToggleWishlist, isInWishlist }) => {
   if (!product) return null;
 
   const isSingleQuantity = product.name === 'Design de Logotipo' || product.name === 'Menu de Restaurante';
@@ -114,24 +116,27 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 mt-auto">
-            <div className="w-full sm:w-1/3">
-                <label htmlFor="quantity-input" className="sr-only">Quantidade</label>
-                <input
-                    id="quantity-input"
-                    type="number"
-                    min="1"
-                    value={quantity}
-                    onChange={handleQuantityChange}
-                    onBlur={handleBlur}
-                    disabled={isAdded || isSingleQuantity}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition disabled:bg-gray-200 text-center"
-                    aria-label="Quantidade do produto"
-                />
-            </div>
+            <div className="flex-grow flex items-center gap-2">
+                {!isSingleQuantity && (
+                    <div className="w-full sm:w-1/3">
+                        <label htmlFor="quantity-input" className="sr-only">Quantidade</label>
+                        <input
+                            id="quantity-input"
+                            type="number"
+                            min="1"
+                            value={quantity}
+                            onChange={handleQuantityChange}
+                            onBlur={handleBlur}
+                            disabled={isAdded || isSingleQuantity}
+                            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition disabled:bg-gray-200 text-center"
+                            aria-label="Quantidade do produto"
+                        />
+                    </div>
+                )}
               <button
                 onClick={handleAddToCart}
                 disabled={isAdded || !isQuantityValid}
-                className={`w-full sm:w-2/3 text-white font-bold py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-2 text-lg ${
+                className={`w-full text-white font-bold py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-2 text-lg ${
                   isAdded
                     ? 'bg-green-500 cursor-not-allowed'
                     : !isQuantityValid 
@@ -151,6 +156,21 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({ product,
                   </>
                 )}
               </button>
+            </div>
+             <button
+                onClick={() => onToggleWishlist(product.id)}
+                disabled={isAdded}
+                className={`w-auto text-lg font-bold py-3 px-4 rounded-md transition-colors flex items-center justify-center border-2 ${
+                    isAdded
+                    ? 'cursor-not-allowed bg-gray-200 border-gray-200 text-gray-400'
+                    : isInWishlist
+                    ? 'bg-red-100 border-red-500 text-red-600 hover:bg-red-200'
+                    : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
+                }`}
+                aria-label={isInWishlist ? 'Remover da lista de desejos' : 'Adicionar à lista de desejos'}
+            >
+                <i className={`${isInWishlist ? 'fas' : 'far'} fa-heart text-xl`}></i>
+            </button>
             </div>
         </div>
       </div>

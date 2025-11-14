@@ -3,14 +3,16 @@ import { LOGO_URL } from '../constants';
 
 interface HeaderProps {
   cartItemCount: number;
+  wishlistItemCount: number;
   onCartClick: () => void;
+  onWishlistClick: () => void;
   onHistoryClick: () => void;
   onAdminClick: () => void;
   onHomeClick: () => void;
   isTransparent?: boolean;
 }
 
-export const Header: React.FC<HeaderProps> = ({ cartItemCount, onCartClick, onHistoryClick, onAdminClick, onHomeClick, isTransparent = false }) => {
+export const Header: React.FC<HeaderProps> = ({ cartItemCount, wishlistItemCount, onCartClick, onWishlistClick, onHistoryClick, onAdminClick, onHomeClick, isTransparent = false }) => {
   
   const headerClasses = isTransparent
     ? "absolute top-0 left-0 right-0 z-40"
@@ -32,6 +34,18 @@ export const Header: React.FC<HeaderProps> = ({ cartItemCount, onCartClick, onHi
           <img src={LOGO_URL} alt="Photo Boost Moz Logo" className="h-12 w-auto" />
         </div>
         <div className="flex items-center space-x-6">
+           <button 
+            onClick={onWishlistClick} 
+            className={`relative ${iconClasses}`}
+            aria-label="Lista de Desejos"
+          >
+            <i className="fas fa-heart text-2xl"></i>
+            {wishlistItemCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {wishlistItemCount}
+              </span>
+            )}
+          </button>
            <button 
             onClick={onHistoryClick} 
             className={iconClasses}

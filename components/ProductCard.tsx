@@ -6,9 +6,11 @@ interface ProductCardProps {
   product: Product;
   onProductClick: (product: Product) => void;
   onAddToCart: (product: Product) => void;
+  onToggleWishlist: (productId: number) => void;
+  isInWishlist: boolean;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onProductClick, onAddToCart }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ product, onProductClick, onAddToCart, onToggleWishlist, isInWishlist }) => {
   const isSingleQuantity = product.name === 'Design de Logotipo' || product.name === 'Menu de Restaurante';
   const [isAdded, setIsAdded] = useState(false);
 
@@ -21,6 +23,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onProductClic
     }, 2000); // O feedback desaparece após 2 segundos
   };
 
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleWishlist(product.id);
+  };
+
+
   return (
     <div 
       className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 group cursor-pointer"
@@ -30,6 +38,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onProductClic
     >
       <div className="relative">
         <img className="w-full h-56 object-cover" src={product.image} alt={product.name} />
+         <button
+            onClick={handleWishlistClick}
+            className={`absolute top-3 right-3 p-2 rounded-full transition-all duration-300 z-10 ${
+                isInWishlist 
+                ? 'bg-white/80 text-red-500' 
+                : 'bg-black/40 text-white opacity-0 group-hover:opacity-100'
+            }`}
+            aria-label={isInWishlist ? 'Remover da lista de desejos' : 'Adicionar à lista de desejos'}
+        >
+            <i className={`${isInWishlist ? 'fas' : 'far'} fa-heart text-xl`}></i>
+        </button>
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-300 flex items-center justify-center">
              <span className="text-white text-lg font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center gap-2">
                 <i className="fas fa-search-plus"></i>

@@ -14,10 +14,13 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { OrderConfirmationModal } from './components/OrderConfirmationModal';
 import { WelcomeBanner } from './components/WelcomeBanner';
 import { AboutUs } from './components/AboutUs';
+import { Wishlist } from './components/Wishlist';
 
 const App: React.FC = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [wishlist, setWishlist] = useState<number[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<'shop' | 'history' | 'admin'>('shop');
@@ -41,9 +44,14 @@ const App: React.FC = () => {
         }));
         setOrderHistory(migratedOrders);
       }
+
+      const savedWishlist = localStorage.getItem('wishlist');
+      if (savedWishlist) {
+        setWishlist(JSON.parse(savedWishlist));
+      }
+
     } catch (error) {
-      console.error("Failed to parse order history from localStorage", error);
-      localStorage.removeItem('orderHistory');
+      console.error("Failed to parse data from localStorage", error);
     }
   }, []);
 
@@ -66,6 +74,23 @@ const App: React.FC = () => {
   
   const handleQuickAddToCart = (product: Product) => {
     handleAddToCart(product, 1, '');
+  };
+
+  const handleToggleWishlist = (productId: number) => {
+    const product = PRODUCTS.find(p => p.id === productId);
+    if (!product) return;
+
+    setWishlist(prev => {
+        const isInWishlist = prev.includes(productId);
+        const updatedWishlist = isInWishlist
+            ? prev.filter(id => id !== productId)
+            : [...prev, productId];
+        localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+        
+        setToastMessage(isInWishlist ? `"${product.name}" removido da lista de desejos!` : `"${product.name}" adicionado à lista de desejos!`);
+        setTimeout(() => setToastMessage(null), 3000);
+        return updatedWishlist;
+    });
   };
 
   const handleProductClick = (product: Product) => {
@@ -122,6 +147,11 @@ const App: React.FC = () => {
     setIsCartOpen(true);
   };
 
+  const handleWishlistClick = () => {
+    setCurrentPage('shop');
+    setIsWishlistOpen(true);
+  };
+
   const handleExploreClick = () => {
     productsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -154,7 +184,14 @@ const App: React.FC = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                       {PRODUCTS.map(product => (
-                        <ProductCard key={product.id} product={product} onProductClick={handleProductClick} onAddToCart={handleQuickAddToCart} />
+                        <ProductCard 
+                          key={product.id} 
+                          product={product} 
+                          onProductClick={handleProductClick} 
+                          onAddToCart={handleQuickAddToCart}
+                          isInWishlist={wishlist.includes(product.id)}
+                          onToggleWishlist={handleToggleWishlist}
+                        />
                       ))}
                     </div>
                   </main>
@@ -193,7 +230,9 @@ const App: React.FC = () => {
       {currentPage !== 'admin' && (
         <Header 
           cartItemCount={cart.length} 
+          wishlistItemCount={wishlist.length}
           onCartClick={handleCartClick}
+          onWishlistClick={handleWishlistClick}
           onHistoryClick={() => setCurrentPage('history')}
           onAdminClick={() => setCurrentPage('admin')}
           onHomeClick={() => setCurrentPage('shop')}
@@ -212,6 +251,17 @@ const App: React.FC = () => {
             onCheckout={handleCheckout}
             onRemoveItem={handleRemoveFromCart}
           />
+
+          <Wishlist
+            isOpen={isWishlistOpen}
+            onClose={() => setIsWishlistOpen(false)}
+            wishlistItems={PRODUCTS.filter(p => wishlist.includes(p.id))}
+            onRemoveItem={handleToggleWishlist}
+            onAddToCart={(product) => {
+                handleQuickAddToCart(product);
+                handleToggleWishlist(product.id); // Remove from wishlist when adding to cart
+            }}
+          />
           
           <CheckoutModal 
             isOpen={isCheckoutOpen}
@@ -229,6 +279,8 @@ const App: React.FC = () => {
             product={selectedProduct}
             onClose={handleCloseDetailModal}
             onAddToCart={handleAddToCart}
+            isInWishlist={selectedProduct ? wishlist.includes(selectedProduct.id) : false}
+            onToggleWishlist={handleToggleWishlist}
           />
           
           <Chatbot />
@@ -257,8 +309,8 @@ const App: React.FC = () => {
           </button>
           
           {toastMessage && (
-             <div className="fixed top-24 right-6 bg-green-500 text-white py-2 px-6 rounded-lg shadow-lg animate-fade-in-down z-50">
-                <i className="fas fa-check-circle mr-2"></i>
+             <div className={`fixed top-24 right-6 text-white py-2 px-6 rounded-lg shadow-lg animate-fade-in-down z-50 ${toastMessage.includes('removido') ? 'bg-red-500' : 'bg-green-500'}`}>
+                <i className={`mr-2 ${toastMessage.includes('removido') ? 'fas fa-trash-alt' : 'fas fa-check-circle'}`}></i>
                 {toastMessage}
             </div>
           )}
